@@ -1,0 +1,25 @@
+---
+title: "Exploration of Historical Fire Regimes, and Rapid Assessment of Current Needs"
+format: html
+---
+
+## Introduction
+
+Understanding historical fire regimes is critical for interpreting ecosystem structure, function, and resilience. Fire has long shaped species composition, nutrient cycling, and landscape patterns, serving as a key ecological process in many systems. Without this context, we risk misinterpreting current conditions and applying management strategies that undermine ecological integrity.
+
+For conservation and restoration, historical fire data provide a reference for reintroducing fire in ways that support native biodiversity and ecosystem health. Many fire-adapted landscapes rely on specific fire frequencies and intensities to maintain habitat quality and prevent encroachment by invasive or woody species.
+
+![Historical Fire Regimes](assets/mfri.jpg){style="float:right; margin-left: 5%; fig-align:right; width:50%;" fig-alt="\"Map of historical fire regimes."}
+
+As climate change and land-use pressures alter fire behavior, comparing current patterns to historical regimes helps managers detect ecological shifts and adapt strategies. Restoring fire’s natural role—grounded in historical understanding—is essential for sustaining resilient, functioning ecosystems.
+
+Using LANDFIRE's [Biophysical Settings](https://landfire.gov/vegetation/bps) and [Existing Vegetation Type-Ecological Systems](https://landfire.gov/vegetation/evt) we:
+
+* Explore historical fire regimes
+* Quantify how much fire would have burned historically
+* Illuminate which ecosystems would have burned the most
+* Do a rapid assessment of how much land would burn annually today on areas that remain in natural vegetation (i.e., not converted to agricultural or urban land uses)
+
+
+
+

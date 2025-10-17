@@ -1,0 +1,62 @@
+
+
+
+
+
+/* Ensure the entire DataTable wrapper is white */
+.dataTables_wrapper {
+  background-color: white !important;
+  color: black !important;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Style the table itself */
+table.dataTable {
+  background-color: white !important;
+  color: black !important;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Style header and body cells */
+table.dataTable thead th,
+table.dataTable tbody td {
+  background-color: white !important;
+  color: black !important;
+  border: 1px solid #ccc;
+  padding: 0.5em;
+}
+
+
+
+/* Custom CSS for DataTable */
+.dataTables_wrapper {
+  background-color: white;
+  color: black;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  color: black;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  background-color: white;
+  color: black;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background-color: #ddd;
+  color: black;
+}
+
+

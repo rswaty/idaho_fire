@@ -1,0 +1,44 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Exploration of Historical Fire Regimes, and Rapid Assessment of Current Needs",
+    "section": "",
+    "text": "Understanding historical fire regimes is critical for interpreting ecosystem structure, function, and resilience. Fire has long shaped species composition, nutrient cycling, and landscape patterns, serving as a key ecological process in many systems. Without this context, we risk misinterpreting current conditions and applying management strategies that undermine ecological integrity.\nFor conservation and restoration, historical fire data provide a reference for reintroducing fire in ways that support native biodiversity and ecosystem health. Many fire-adapted landscapes rely on specific fire frequencies and intensities to maintain habitat quality and prevent encroachment by invasive or woody species.\n\n\n\nHistorical Fire Regimes\n\n\nAs climate change and land-use pressures alter fire behavior, comparing current patterns to historical regimes helps managers detect ecological shifts and adapt strategies. Restoring fire’s natural role—grounded in historical understanding—is essential for sustaining resilient, functioning ecosystems.\nUsing LANDFIRE’s Biophysical Settings and Existing Vegetation Type-Ecological Systems we:\n\nExplore historical fire regimes\nQuantify how much fire would have burned historically\nIlluminate which ecosystems would have burned the most\nDo a rapid assessment of how much land would burn annually today on areas that remain in natural vegetation (i.e., not converted to agricultural or urban land uses)"
+  },
+  {
+    "objectID": "index.html#introduction",
+    "href": "index.html#introduction",
+    "title": "Exploration of Historical Fire Regimes, and Rapid Assessment of Current Needs",
+    "section": "",
+    "text": "Understanding historical fire regimes is critical for interpreting ecosystem structure, function, and resilience. Fire has long shaped species composition, nutrient cycling, and landscape patterns, serving as a key ecological process in many systems. Without this context, we risk misinterpreting current conditions and applying management strategies that undermine ecological integrity.\nFor conservation and restoration, historical fire data provide a reference for reintroducing fire in ways that support native biodiversity and ecosystem health. Many fire-adapted landscapes rely on specific fire frequencies and intensities to maintain habitat quality and prevent encroachment by invasive or woody species.\n\n\n\nHistorical Fire Regimes\n\n\nAs climate change and land-use pressures alter fire behavior, comparing current patterns to historical regimes helps managers detect ecological shifts and adapt strategies. Restoring fire’s natural role—grounded in historical understanding—is essential for sustaining resilient, functioning ecosystems.\nUsing LANDFIRE’s Biophysical Settings and Existing Vegetation Type-Ecological Systems we:\n\nExplore historical fire regimes\nQuantify how much fire would have burned historically\nIlluminate which ecosystems would have burned the most\nDo a rapid assessment of how much land would burn annually today on areas that remain in natural vegetation (i.e., not converted to agricultural or urban land uses)"
+  },
+  {
+    "objectID": "historical_fire.html",
+    "href": "historical_fire.html",
+    "title": "Historical Fire Regimes",
+    "section": "",
+    "text": "From a quick assessment of the historical Mean Fire Return Intervals for Idaho we found:\n\nRoughly 958,577 acres burned annually or 2% of Idaho.\nThere were 82 Biophysical Settings (by name, there may be more if counting by variants). The Inter-Mountain Basins Big Sagebrush Steppe was the most prevalent overall, with the Inter-Mountain Basins Montane Sagebrush Steppe having the most fire annually.\nMean Fire Return Intervals for all fire types combined ranged from 10 to 1223 years, with an area weighted mean of 103 (weighted by acres of BpSs)"
+  },
+  {
+    "objectID": "historical_fire.html#summary",
+    "href": "historical_fire.html#summary",
+    "title": "Historical Fire Regimes",
+    "section": "",
+    "text": "From a quick assessment of the historical Mean Fire Return Intervals for Idaho we found:\n\nRoughly 958,577 acres burned annually or 2% of Idaho.\nThere were 82 Biophysical Settings (by name, there may be more if counting by variants). The Inter-Mountain Basins Big Sagebrush Steppe was the most prevalent overall, with the Inter-Mountain Basins Montane Sagebrush Steppe having the most fire annually.\nMean Fire Return Intervals for all fire types combined ranged from 10 to 1223 years, with an area weighted mean of 103 (weighted by acres of BpSs)"
+  },
+  {
+    "objectID": "historical_fire.html#fire-type-by-biophysical-setting",
+    "href": "historical_fire.html#fire-type-by-biophysical-setting",
+    "title": "Historical Fire Regimes",
+    "section": "Fire Type by Biophysical Setting",
+    "text": "Fire Type by Biophysical Setting\nLANDFIRE’s Biophysical Settings tells many stories. Officially it is:\n\na modeled representation of the vegetation system that may have been dominant on the landscape prior to Euro-American settlement and is based on both the current biophysical environment and an approximation of modeled past disturbance regimes. LF uses BPS to depict reference conditions of vegetation across landscapes.\n\nIt show us where vegetation systems may have occurred historically under natural disturbance regimes, and allows us to explore historical fire regimes including their Mean Fire Return Interval (MFRI) by fire type. The dataset includes multiple attributes including:\n\nBPS_CODE Biophysical Settings (BpS) code used by LANDFIRE\nZONE National Land Cover Database Map Zone the BpS relates to\nBPS_MODEL Unique BpS model code\nBPS_NAME BpS Name\nFRI_REPLAC Average historic replacement fire frequency (greater than 75% top kill of vegetation)\nFRI_MIXED Average historic mixed fire frequency\nFRI_SURFAC Average historic surface fire frequency\nFRI_ALL Quantifies the average period between fires (all types).\n\nYou can download the raw attribute table here and the data dictionary here.\nFor the chart and data table below we added some additional calculations such as annual acres burned by fire severity."
+  },
+  {
+    "objectID": "historical_fire.html#almost-raw-historical-fire-regime-data-table",
+    "href": "historical_fire.html#almost-raw-historical-fire-regime-data-table",
+    "title": "Historical Fire Regimes",
+    "section": "Almost raw historical fire regime data table",
+    "text": "Almost raw historical fire regime data table\nAs noted above for the charts and data table we removed some columns (e.g., color ramp), added some calculations (e.g., annual acres burned) and renamed the columns for easier work in R and for clarity. Below you can filter, sort and explore the data. In the following table:\n\n‘fri’ = fire return interval, or the mean number of years between fires\nThere are several columns that will be ‘off screen’. Look for horizontal scroll bar at the bottom of the table.\nthe “annual_probability_____” columns refer to the ‘chance’ that a location had that particular type of fire during a year on average.\n\nLANDFIRE used the annual probabilities in the original modeling (see Blankenship et al., (2021) for more information). Below is an example of how the math works:\nExample calculation of MFRI and annual acres burned for a 1,000 acre ecosystem with a 0.2 annual probability of fire:\n\n\\[\nMFRI = 1/0.2 = 5ys\n\\] \\[\nAnnualAcresBurned = 1,000ac*0.2 = 50ac\n\\]"
+  }
+]
