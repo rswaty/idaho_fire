@@ -15,6 +15,9 @@ website:
         
       - href: historical_fire.qmd
         text: Historical Fire
+        
+      - href: current_landscape.qmd
+        text: Current Landscape
 
       - href: about.qmd
         text: About

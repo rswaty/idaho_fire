@@ -1,0 +1,61 @@
+---
+title: "Current Landscape"
+---
+
+```{r}
+#| label: wrangle input data for current landscape
+#| message: false
+#| warning: false
+#| include: false
+
+
+ROI <- "Idaho"
+
+# load libraries
+library(DT)
+library(janitor)
+library(plotly)
+library(scales)
+library(tidyverse)
+library(tidytext)
+library(viridis)
+
+# prevent scientific notation
+options(scipen = 999)
+
+# read in raw data
+raw_data <- read_csv("inputs/bps_evt_cmbn_idaho.csv") |>
+  clean_names() |>
+  mutate(raw_acres = round(count * 0.2223945)) |>
+  mutate(across(everything(), ~replace(., . == -9999, 0)))
+
+remove_evt_phys_types <- c(
+  "Open Water",
+  "Sparsely Vegetated",
+  "Snow-Ice")
+
+
+current_data <- raw_data %>%
+  mutate(reclass_evt = case_when(
+    grepl("Developed|Quarries", evt_phys) ~ "Developed",
+    grepl("Exotic", evt_phys) ~ "Exotics",
+    grepl("Conifer|Shrubland|Riparian|Grassland|Open Water|Sparsely Vegetated|Hardwood|Snow-Ice|Conifer-Hardwood", evt_phys) ~ "Natural",
+    TRUE ~ "Other"))
+
+
+
+```
+
+
+## Historical Fire "minus" Agricultural and Developed Land Uses in `r ROI`
+
+On the [Historical Fire](docs/historical_fire.qmd) we simply presented information on the fire regimes that may have been on the landscape pre-European Colonization.  While that information provides important context, baselines and background on how important fire may be as a disturbance for particular ecosystems, we are now working in landscapes that often have land uses that are incompatible with fire including development and agriculture.  Here we 'subtract' those land uses from our historical fire numbers as a first step in calibrating potential fire management on the landscape today. 
+
+Below we present:
+
+1. Summary bullets
+2. Map of Historical Mean Fire Return Intervals with agricultural and developed lands whited out. 
+3. 
+
+
+## Summary
