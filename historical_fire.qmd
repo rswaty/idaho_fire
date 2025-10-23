@@ -326,7 +326,10 @@ ggplot(bps_area_mfri_df , aes(x = reorder(bps_name_wrapped,total_bps_acres),  y 
     caption = "Data from LANDFIRE, Chart © Randy Swaty") +
   theme_minimal(base_size = 14) +
   scale_y_continuous(name = 'Acres', labels = comma) +
-  theme(panel.grid = element_blank())
+  theme(panel.grid = element_blank(),
+        plot.caption = element_text(hjust = 0, face = "italic"),
+        plot.title.position = "plot",
+        plot.caption.position = "plot",)
 
 
 bps_area_mfri_chart
@@ -370,7 +373,10 @@ annual_acres_burned_chart <- ggplot(bps_area_mfri_df,
     caption = "Data from LANDFIRE, Chart © Randy Swaty") +
   theme_minimal(base_size = 14) +
   scale_y_continuous(name = 'Acres', labels = comma) +
-  theme(panel.grid = element_blank()) 
+  theme(panel.grid = element_blank(),
+        plot.caption = element_text(hjust = 0, face = "italic"),
+        plot.title.position = "plot",
+        plot.caption.position = "plot",)
 
 
 annual_acres_burned_chart
@@ -411,6 +417,10 @@ hist_fire_panel_chart <- ggplot(hist_fire_10__long,
     y = "Acres" ) +
   theme_minimal(base_size = 14) +
   theme(
+
+    plot.caption = element_text(hjust = 0, face = "italic"),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
     panel.grid = element_blank(),
     strip.background = element_rect(fill = "grey90", color = NA),
     strip.text = element_text(face = "bold"),

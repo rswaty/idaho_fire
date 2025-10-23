@@ -8,10 +8,12 @@ title: "Current Landscape"
 #| warning: false
 #| include: false
 
+# set up ----
 
+# Set region of interest
 ROI <- "Idaho"
 
-# load libraries
+# Load libraries
 library(DT)
 library(janitor)
 library(plotly)
@@ -20,27 +22,209 @@ library(tidyverse)
 library(tidytext)
 library(viridis)
 
-# prevent scientific notation
+# Prevent scientific notation
 options(scipen = 999)
 
-# read in raw data
-raw_data <- read_csv("inputs/bps_evt_cmbn_idaho.csv") |>
-  clean_names() |>
-  mutate(raw_acres = round(count * 0.2223945)) |>
-  mutate(across(everything(), ~replace(., . == -9999, 0)))
+# Read and clean raw data
+raw_data <- read_csv("inputs/bps_evt_cmbn_idaho.csv") %>%
+  clean_names() %>%
+  mutate(
+    raw_acres = round(count * 0.2223945),
+    across(everything(), ~replace(., . == -9999, 0))
+  )
 
-remove_evt_phys_types <- c(
-  "Open Water",
-  "Sparsely Vegetated",
-  "Snow-Ice")
+# Optional: remove certain evt_phys types
+remove_evt_phys_types <- c("Open Water", "Sparsely Vegetated", "Snow-Ice")
 
-
-current_data <- raw_data %>%
+# Reclassify vegetation
+raw_data <- raw_data %>%
   mutate(reclass_evt = case_when(
     grepl("Developed|Quarries", evt_phys) ~ "Developed",
     grepl("Exotic", evt_phys) ~ "Exotics",
-    grepl("Conifer|Shrubland|Riparian|Grassland|Open Water|Sparsely Vegetated|Hardwood|Snow-Ice|Conifer-Hardwood", evt_phys) ~ "Natural",
-    TRUE ~ "Other"))
+    grepl("Conifer|Shrubland|Riparian|Grassland|Open Water|Sparsely Vegetated|Hardwood|Snow-Ice|Conifer-Hardwood|Exotic Tree-Shrub|Exotic Herbaceous", evt_phys) ~ "Natural",
+    grepl("Agricultural", evt_phys) ~ "Agricultural",
+    TRUE ~ "Other"
+  ))
+
+# Step 1: Calculate mean FRI per bps_name
+fri_summary <- raw_data %>%
+  group_by(bps_name) %>%
+  summarise(
+    mean_replacement_fri = round(mean(fri_replac, na.rm = TRUE)),
+    mean_mixed_fri = round(mean(fri_mixed, na.rm = TRUE)),
+    mean_surface_fri = round(mean(fri_surfac, na.rm = TRUE)),
+    mean_all_fri = round(mean(fri_allfir, na.rm = TRUE)),
+    .groups = "drop"
+  )
+
+# Step 2: Calculate total acres per bps_name × reclass_evt
+bps_reclass_acres <- raw_data %>%
+  group_by(bps_name, reclass_evt) %>%
+  summarise(reclass_acres = sum(raw_acres, na.rm = TRUE), .groups = "drop")
+
+ # Calculate total acres per bps_name
+bps_totals <- bps_reclass_acres %>%
+  group_by(bps_name) %>%
+  summarise(total_bps_acres = sum(reclass_acres), .groups = "drop")
+
+# Step 3: Join and calculate annual probabilities and acres burned
+current_data <- bps_reclass_acres %>%
+  left_join(fri_summary, by = "bps_name") %>%
+  left_join(bps_totals, by = "bps_name") %>%
+  mutate(
+    annual_prob_replacement = ifelse(mean_replacement_fri > 0, 1 / mean_replacement_fri, 0),
+    annual_prob_mixed = ifelse(mean_mixed_fri > 0, 1 / mean_mixed_fri, 0),
+    annual_prob_surface = ifelse(mean_surface_fri > 0, 1 / mean_surface_fri, 0),
+    annual_prob_all = ifelse(mean_all_fri > 0, 1 / mean_all_fri, 0),
+    annual_acres_replacement = round(annual_prob_replacement * reclass_acres),
+    annual_acres_mixed = round(annual_prob_mixed * reclass_acres),
+    annual_acres_surface = round(annual_prob_surface * reclass_acres),
+    annual_acres_all = round(annual_prob_all * reclass_acres)
+  ) %>%
+  arrange(desc(reclass_acres))
+
+
+# calculations for summary bullets ----
+
+# summarize by conversion type
+
+conversion_summary_all <- current_data %>%
+  select(c(bps_name,
+           reclass_evt,
+           reclass_acres))
+
+
+# keep onlyt ag and developed
+conversion_summary <- conversion_summary_all |>
+    filter(reclass_evt %in% c("Agricultural", "Developed"))
+
+# calculate total converted acres across all bps
+total_converted_acres <- sum(conversion_summary$reclass_acres)
+
+# total area of the ROI
+total_roi_acres <- sum(current_data$total_bps_acres, na.rm = TRUE)
+
+
+
+# percentages for the whole ROI (rounded to whole numbers) 
+percent_converted <- round((total_converted_acres / total_roi_acres) * 100)
+percent_agricultural_total <- round((sum(conversion_summary$acres_converted[conversion_summary$reclass_evt == "Agricultural"]) / total_roi_acres) * 100)
+percent_developed_total <- round((sum(conversion_summary$acres_converted[conversion_summary$reclass_evt == "Developed"]) / total_roi_acres) * 100)
+
+# before and after fire numbers
+
+sum_all_hist_fire <- sum(current_data$annual_acres_all)
+
+current_data_minus_ag_dev <- current_data |>
+  filter(!(reclass_evt %in% c("Agicultural" ,"Developed")))
+
+sum_all_hist_fire_minus_ag_dev <- sum(current_data_minus_ag_dev$annual_acres_all)
+
+# wrangle for dumbbell chart
+
+current_data_for_dumbbell <- current_data |>
+  select(c(bps_name,
+           reclass_evt,
+           annual_acres_all)) 
+
+
+
+# Total acres burned per bps_name
+total_acres_burned <- current_data_for_dumbbell %>%
+  group_by(bps_name) %>%
+  summarise(total_acres = sum(annual_acres_all), .groups = "drop")
+
+# Acres burned excluding Agricultural and Developed
+natural_acres_burned <- current_data_for_dumbbell %>%
+  filter(!reclass_evt %in% c("Agricultural", "Developed")) %>%
+  group_by(bps_name) %>%
+  summarise(natural_acres = sum(annual_acres_all), .groups = "drop")
+
+# Merge for dumbbell chart
+dumbbell_df_wide <- left_join(total_acres_burned, natural_acres_burned, by = "bps_name") %>%
+  mutate(natural_acres = replace_na(natural_acres, 0)) |>
+  arrange(desc(total_acres))|>
+  slice_max(total_acres, n = 10)
+
+dumbbell_df <- dumbbell_df_wide |>
+  pivot_longer(!bps_name,
+               names_to = 'status',
+               values_to = 'acres_burned') 
+
+
+dumbbell_arrow <- dumbbell_df_wide |>
+  mutate(change = total_acres - natural_acres,
+         sign_change = (change > 0)) %>%
+  mutate(bps_name_wrapped = str_wrap(bps_name, width = 30),
+         bps_name_wrapped = fct_reorder(bps_name_wrapped, total_acres, .desc = FALSE),
+        label = paste0(bps_name_wrapped, " (- ", comma(abs(change)), ")"),
+        label = fct_reorder(label, total_acres, .desc = FALSE))
+
+
+## wrangle data for arrow panel chart
+
+past_fire <- current_data |>
+  group_by(bps_name) %>%
+  summarise(
+    annual_acres_replacement = sum(annual_acres_replacement, na.rm = TRUE),
+    annual_acres_mixed = sum(annual_acres_mixed, na.rm = TRUE),
+    annual_acres_surface = sum(annual_acres_surface, na.rm = TRUE),
+    annual_acres_all = sum(annual_acres_all, na.rm = TRUE),
+    total_bps_acres = max(total_bps_acres, na.rm = TRUE)) |>
+  arrange(desc(total_bps_acres)) |>
+  top_n(n = 10, wt = total_bps_acres) |>
+  select(!c(annual_acres_all, total_bps_acres))
+
+
+current_fire <- current_data |>
+  filter(!(reclass_evt %in% c("Agricultural", "Developed"))) |>
+  group_by(bps_name) %>%
+  summarise(
+    annual_acres_replacement = sum(annual_acres_replacement, na.rm = TRUE),
+    annual_acres_mixed = sum(annual_acres_mixed, na.rm = TRUE),
+    annual_acres_surface = sum(annual_acres_surface, na.rm = TRUE),
+    annual_acres_all = sum(annual_acres_all, na.rm = TRUE),
+    total_bps_acres = max(total_bps_acres, na.rm = TRUE)) |>
+  arrange(desc(total_bps_acres)) |>
+  top_n(n = 10, wt = total_bps_acres) |>
+  select(!c(annual_acres_all, total_bps_acres)) |>
+  rename(current_annual_acres_replacement = annual_acres_replacement,
+         current_annual_acres_mixed = annual_acres_mixed,
+         current_annual_acres_surface = annual_acres_surface)
+
+
+
+ 
+panel_arrow_wide <- past_fire |>
+  left_join(current_fire, by = "bps_name")
+
+
+# Assuming your data frame is called panel_arrow_df
+panel_arrow_long <- panel_arrow_wide %>%
+  # Rename columns for clarity
+  rename(
+    past_replacement = annual_acres_replacement,
+    past_mixed = annual_acres_mixed,
+    past_surface = annual_acres_surface,
+    current_replacement = current_annual_acres_replacement,
+    current_mixed = current_annual_acres_mixed,
+    current_surface = current_annual_acres_surface
+  ) %>%
+  # Pivot to long format for past and current values
+  pivot_longer(
+    cols = starts_with("past_") | starts_with("current_"),
+    names_to = c("time", "fire_type"),
+    names_sep = "_",
+    values_to = "value"
+  ) %>%
+  # Spread time into separate columns
+  pivot_wider(
+    names_from = time,
+    values_from = value
+  )
+
+
+
 
 
 
@@ -54,8 +238,193 @@ On the [Historical Fire](docs/historical_fire.qmd) we simply presented informati
 Below we present:
 
 1. Summary bullets
-2. Map of Historical Mean Fire Return Intervals with agricultural and developed lands whited out. 
-3. 
-
-
+2. Maps of current agricultural and developed land uses, and historical Mean Fire Return Intervals (MFRI) with agricultural and developed lands masked out. 
+3. Charts of:
+    * levels of natural, agricultural and developed area per Biophysical Setting (BpS)
+    * changes to historical annual acres burned due to conversion to agricultural and developed land uses
+    * changes to historical annual acres burned per fire severity type due to conversion to agricultural and developed land uses
+    
 ## Summary
+
+We combined LANDFIRE's [Existing Vegetation Type (EVT)](https://landfire.gov/vegetation/evt) data with LANDFIRE's [Biophysical Settings (BpS)](https://landfire.gov/vegetation/bps) so that we could explore conversion to agricultural and developed land uses, and to see how much area could burn per year on the remaining lands if historical fire regimes were implemented.
+
+* We found that roughly **`r percent_converted`%** of `r ROI` has been converted total, with **`r percent_agricultural_total`%** conversion to agricultural and **`r percent_developed_total`% ** conversion to developed land uses.
+* Historically **`r scales::comma(sum_all_hist_fire)` ** acres burned annually.  If fires burned with historical fire regimes on current non-agricultural or developed lands **`r scales::comma(sum_all_hist_fire_minus_ag_dev)` **  acres would burn annually.  
+
+## Conversion Map, and Change to Fire Regime map
+
+First, we present a map of agricultural and developed land uses as mapped in LANDFIRE's EVT data.
+
+<br>
+
+![Map of agricultural and developed land uses.  Unconverted areas in green.](assets/ag_dev_green.jpg){style=width:90%;" fig-alt="\"Map of historical fire regimes."}
+
+Below is the historical fire regime map presented on the home page with the areas currently mapped as agricultural or developed land uses masked out with white.
+
+<br>
+
+![Historical Fire Regimes with current agricultural and developed areas masked in white.](assets/mfri_minus_ag_dev.jpg){style=width:90%;" fig-alt="\"Map of historical fire regimes."}
+
+
+## Overall conversion
+
+
+
+
+<br>
+
+
+```{r}
+#| label: conversion stacked bar
+#| echo: false
+#| message: false
+#| warning: false
+#| fig.width: 10
+#| fig.height: 8
+
+
+# Wrap BPS_NAME to 30 characters
+conversion_summary_all$short_name <- str_wrap(conversion_summary_all$bps_name, width = 30)
+
+# Summarize total acres per short_name
+top_10_names <- conversion_summary_all %>%
+  group_by(short_name) %>%
+  summarise(total_acres = sum(reclass_acres, na.rm = TRUE)) %>%
+  arrange(desc(total_acres)) %>%
+  slice(1:10)
+
+# Filter original data to only include top 10
+conversion_top10 <- conversion_summary_all %>%
+  filter(short_name %in% top_10_names$short_name)
+
+# Reorder factor levels based on total acres (descending)
+conversion_top10$short_name <- factor(conversion_top10$short_name,
+                                      levels = rev(top_10_names$short_name))
+
+
+# Reclass_evt factor levels
+conversion_top10$reclass_evt <- factor(conversion_top10$reclass_evt, levels = c(
+  "Agricultural", 
+  "Developed", 
+  "Exotics",
+  "Natural"
+))
+
+# Plot
+plot <- ggplot(conversion_top10, aes(fill = reclass_evt, y = reclass_acres, x = short_name)) +
+  geom_bar(position = "stack", stat = "identity") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Ecosystems by Acres Converted",
+    subtitle = "Stacked by conversion status",
+    caption = "Data from landfire.gov.",
+    x = "",
+    y = "Acres",
+    fill = "Status"
+  ) +
+  scale_y_continuous(labels = comma) +
+  theme_bw(base_size = 14) +
+  scale_fill_manual(values = c(
+    "#e8ab31", # Agricutural
+    "#363535", # Developed
+    "#e7298a", # exotics
+    "#2e7541" # unconverted
+  )) +
+  theme(
+    plot.caption = element_text(hjust = 0, face = "italic"),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    legend.position = c(.9, # horizontal, smaller moves left
+                        .2) # vertical, larger moves up
+  )
+
+
+plot
+
+
+
+
+
+```
+
+<br>
+
+## Changes in Historical Annual Acres Burned due to Conversion
+
+The chart below depicts the change in annual acres burned when agricultural and developed lands are removed from the equation.  In other words, what would be the annual area burned on 'natural' lands today if we had historical fire regimes?
+
+The reduction of annual acres burned is in parentheses.  Top ten BpSs shown. 
+
+
+```{r}
+#| label: dumbbell_chart
+#| echo: false
+#| message: false
+#| warning: false
+#| fig.width: 10
+#| fig.height: 10
+
+
+
+arrow_plot <- dumbbell_arrow |> 
+  ggplot(
+    aes(
+      x = total_acres, xend = natural_acres, 
+      y = label, label
+    ) ) +
+  geom_segment(
+    arrow = arrow(angle = 30, length = unit(0.2, 'cm')),
+    size = 1
+  ) +
+  labs(
+    x = 'LIFE EXPECTANCY', 
+    y = element_blank(),
+    title = 'Change in annual acres burned due to land conversion') +
+  #scale_color_manual(
+    #values = unname(color_palette)) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none") + 
+  scale_x_continuous(name = 'Acres', labels = comma) +
+  theme(
+    plot.caption = element_text(hjust = 0, face = "italic"),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    legend.position = "none") 
+
+arrow_plot
+
+```
+
+
+```{r}
+library(ggplot2)
+
+
+
+# Wrap long BpS names for better readability
+panel_arrow_long <- panel_arrow_long %>%
+  mutate(bps_name_wrapped = str_wrap(bps_name, width = 25))
+
+ggplot(panel_arrow_long, aes(y = bps_name_wrapped)) +
+  geom_segment(aes(x = past, xend = current, yend = bps_name_wrapped),
+               arrow = arrow(length = unit(0.25, "cm")),
+               color = "steelblue", size = 1) +
+  geom_point(aes(x = past), color = "darkred", size = 3) +
+  geom_point(aes(x = current), color = "darkgreen", size = 3) +
+  facet_wrap(~ fire_type, scales = "free_x") +
+  labs(title = "Change in Fire Acres by BpS and Fire Type",
+       x = "Annual Acres",
+       y = "BpS Name",
+       caption = "Arrow: Past → Current") +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.y = element_text(size = 10),
+        panel.grid.minor = element_blank())
+```
+
+
+
+
+
+
+
