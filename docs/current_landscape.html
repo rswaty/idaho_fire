@@ -20,41 +20,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -356,7 +321,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="historical-fire-minus-agricultural-and-developed-land-uses-in-idaho" class="level2">
 <h2 class="anchored" data-anchor-id="historical-fire-minus-agricultural-and-developed-land-uses-in-idaho">Historical Fire “minus” Agricultural and Developed Land Uses in Idaho</h2>
 <p>On the <a href="docs/historical_fire.qmd">Historical Fire</a> we simply presented information on the fire regimes that may have been on the landscape pre-European Colonization. While that information provides important context, baselines and background on how important fire may be as a disturbance for particular ecosystems, we are now working in landscapes that often have land uses that are incompatible with fire including development and agriculture. Here we ‘subtract’ those land uses from our historical fire numbers as a first step in calibrating potential fire management on the landscape today.</p>
-<p>Below we present:</p>
+<div class="quarto-figure quarto-figure-center" style="float:right; margin-left: 5%; fig-align:right; width:45%;">
+<figure class="figure">
+<p><img src="assets/pixel_painting.png" class="img-fluid figure-img" alt="&quot;Map of historical fire regimes."></p>
+<figcaption>“Pixel Painting” by Leo Barch after Robin Holmes (https://watercyclecolors.com/?page_id=1246)</figcaption>
+</figure>
+</div>
+<p><strong>Below we present:</strong></p>
 <ol type="1">
 <li>Summary bullets</li>
 <li>Maps of current agricultural and developed land uses, and historical Mean Fire Return Intervals (MFRI) with agricultural and developed lands masked out.</li>
@@ -367,12 +338,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>changes to historical annual acres burned per fire severity type due to conversion to agricultural and developed land uses</li>
 </ul></li>
 </ol>
+<p><br> <br> <br></p>
 </section>
 <section id="summary" class="level2">
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
 <p>We combined LANDFIRE’s <a href="https://landfire.gov/vegetation/evt">Existing Vegetation Type (EVT)</a> data with LANDFIRE’s <a href="https://landfire.gov/vegetation/bps">Biophysical Settings (BpS)</a> so that we could explore conversion to agricultural and developed land uses, and to see how much area could burn per year on the remaining lands if historical fire regimes were implemented.</p>
 <ul>
-<li>We found that roughly <strong>4%</strong> of Idaho has been converted total, with <strong>0%</strong> conversion to agricultural and <strong>0% </strong> conversion to developed land uses.</li>
+<li>We found that roughly <strong>4%</strong> of Idaho has been converted total, with <strong>3%</strong> conversion to agricultural and <strong>1% </strong> conversion to developed land uses.</li>
 <li>Historically <strong>958,578 </strong> acres burned annually. If fires burned with historical fire regimes on current non-agricultural or developed lands <strong>938,632 </strong> acres would burn annually.</li>
 </ul>
 </section>
@@ -423,32 +395,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrap long BpS names for better readability</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>panel_arrow_long <span class="ot">&lt;-</span> panel_arrow_long <span class="sc">%&gt;%</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bps_name_wrapped =</span> <span class="fu">str_wrap</span>(bps_name, <span class="at">width =</span> <span class="dv">25</span>))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(panel_arrow_long, <span class="fu">aes</span>(<span class="at">y =</span> bps_name_wrapped)) <span class="sc">+</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> past, <span class="at">xend =</span> current, <span class="at">yend =</span> bps_name_wrapped),</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.25</span>, <span class="st">"cm"</span>)),</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> past), <span class="at">color =</span> <span class="st">"darkred"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> current), <span class="at">color =</span> <span class="st">"darkgreen"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> fire_type, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Change in Fire Acres by BpS and Fire Type"</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Annual Acres"</span>,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"BpS Name"</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Arrow: Past → Current"</span>) <span class="sc">+</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="current_landscape_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="current_landscape_files/figure-html/change 3 panel-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>

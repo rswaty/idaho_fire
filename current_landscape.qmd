@@ -108,8 +108,10 @@ total_roi_acres <- sum(current_data$total_bps_acres, na.rm = TRUE)
 
 # percentages for the whole ROI (rounded to whole numbers) 
 percent_converted <- round((total_converted_acres / total_roi_acres) * 100)
-percent_agricultural_total <- round((sum(conversion_summary$acres_converted[conversion_summary$reclass_evt == "Agricultural"]) / total_roi_acres) * 100)
-percent_developed_total <- round((sum(conversion_summary$acres_converted[conversion_summary$reclass_evt == "Developed"]) / total_roi_acres) * 100)
+
+percent_agricultural_total <- round((sum(conversion_summary$reclass_acres[conversion_summary$reclass_evt == "Agricultural"]) / total_roi_acres) * 100)
+
+percent_developed_total <- round((sum(conversion_summary$reclass_acres[conversion_summary$reclass_evt == "Developed"]) / total_roi_acres) * 100)
 
 # before and after fire numbers
 
@@ -235,7 +237,11 @@ panel_arrow_long <- panel_arrow_wide %>%
 
 On the [Historical Fire](docs/historical_fire.qmd) we simply presented information on the fire regimes that may have been on the landscape pre-European Colonization.  While that information provides important context, baselines and background on how important fire may be as a disturbance for particular ecosystems, we are now working in landscapes that often have land uses that are incompatible with fire including development and agriculture.  Here we 'subtract' those land uses from our historical fire numbers as a first step in calibrating potential fire management on the landscape today. 
 
-Below we present:
+!["Pixel Painting" by Leo Barch after Robin Holmes (https://watercyclecolors.com/?page_id=1246)](assets/pixel_painting.png){style="float:right; margin-left: 5%; fig-align:right; width:45%;" fig-alt="\"Map of historical fire regimes."}
+
+
+
+**Below we present:**
 
 1. Summary bullets
 2. Maps of current agricultural and developed land uses, and historical Mean Fire Return Intervals (MFRI) with agricultural and developed lands masked out. 
@@ -243,6 +249,10 @@ Below we present:
     * levels of natural, agricultural and developed area per Biophysical Setting (BpS)
     * changes to historical annual acres burned due to conversion to agricultural and developed land uses
     * changes to historical annual acres burned per fire severity type due to conversion to agricultural and developed land uses
+    
+<br>
+<br>
+<br>
     
 ## Summary
 
@@ -379,7 +389,8 @@ arrow_plot <- dumbbell_arrow |>
   labs(
     x = 'LIFE EXPECTANCY', 
     y = element_blank(),
-    title = 'Change in annual acres burned due to land conversion') +
+    title = 'Change in annual acres burned due to land conversion',
+    caption = "Arrow: Past → Current") +
   #scale_color_manual(
     #values = unname(color_palette)) +
   theme_minimal(base_size = 14) +
@@ -398,28 +409,68 @@ arrow_plot
 
 
 ```{r}
+#| label: change 3 panel
+#| echo: false
+#| message: false
+#| warning: false
+#| fig.height: 10
+#| fig.width: 10
+
 library(ggplot2)
+library(dplyr)
+library(stringr)
+library(scales)
 
+# Wrap and reverse order of top 10 BpS names
+ordered_names <- rev(str_wrap(top_10_names$short_name, width = 25))
 
+# Prepare the data
+panel_arrow_long <- panel_arrow_long |>
+  mutate(
+    fire_type = str_to_title(as.character(fire_type)),  # e.g., "replacement" → "Replacement"
+    fire_type = factor(fire_type, levels = c("Surface", "Mixed", "Replacement")),
+    bps_name_wrapped = str_wrap(bps_name, width = 25),
+    bps_name_wrapped = factor(bps_name_wrapped, levels = ordered_names)
+  )
 
-# Wrap long BpS names for better readability
-panel_arrow_long <- panel_arrow_long %>%
-  mutate(bps_name_wrapped = str_wrap(bps_name, width = 25))
-
-ggplot(panel_arrow_long, aes(y = bps_name_wrapped)) +
+# Create the plot
+change_three_panel_plot <-
+  ggplot(panel_arrow_long, aes(y = bps_name_wrapped)) +
   geom_segment(aes(x = past, xend = current, yend = bps_name_wrapped),
                arrow = arrow(length = unit(0.25, "cm")),
-               color = "steelblue", size = 1) +
-  geom_point(aes(x = past), color = "darkred", size = 3) +
-  geom_point(aes(x = current), color = "darkgreen", size = 3) +
-  facet_wrap(~ fire_type, scales = "free_x") +
-  labs(title = "Change in Fire Acres by BpS and Fire Type",
-       x = "Annual Acres",
-       y = "BpS Name",
-       caption = "Arrow: Past → Current") +
+               color = "#373b38", size = 1) +
+  # geom_point(aes(x = past), color = "#373b38", size = 2) +
+  # geom_point(aes(x = current), color = "#373b38", size = 2) +
   theme_minimal(base_size = 14) +
-  theme(axis.text.y = element_text(size = 10),
-        panel.grid.minor = element_blank())
+  theme(
+    plot.caption = element_text(hjust = 0, face = "italic"),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    panel.grid = element_blank(),
+    strip.background = element_rect(fill = "grey90", color = NA),
+    strip.text = element_text(face = "bold"),
+    plot.subtitle = element_text(margin = margin(b = 20, unit = "pt"))
+  ) +
+  facet_wrap(~ fire_type,
+             scales = "free_x",
+             labeller = labeller(fire_type = toupper)) +
+  guides(fill = "none") +
+  scale_x_continuous(labels = comma, breaks = pretty_breaks(n = 3)) +
+  labs(
+    title = "Change in annual acres burned due to land conversion",
+    subtitle = "Split out by fire type.  Note: X-axis varies between panels.",
+    x = "Annual Acres",
+    y = "",
+    caption = "Arrow: Past → Current"
+  )
+
+# Print the plot
+change_three_panel_plot
+
+
+
+
+
 ```
 
 
